@@ -20,59 +20,7 @@ const Index = () => {
   const [elements, setElements] = useState<UIElement[]>([]);
   const { toast } = useToast();
 
-  const generateMockElements = (url: string): UIElement[] => {
-    const mockElements: UIElement[] = [
-      {
-        id: 1,
-        type: 'button',
-        name: 'primary_btn',
-        description: 'Primary button с градиентом',
-        logic: 'При нажатии выполняет основное действие'
-      },
-      {
-        id: 2,
-        type: 'input',
-        name: 'email_field',
-        description: 'Текстовое поле для email',
-        logic: 'Валидация email формата при вводе'
-      },
-      {
-        id: 3,
-        type: 'text',
-        name: 'welcome_heading',
-        description: 'Заголовок "Добро пожаловать"',
-        logic: 'Статический текст для приветствия'
-      },
-      {
-        id: 4,
-        type: 'card',
-        name: 'info_card',
-        description: 'Карточка с информацией',
-        logic: 'Отображение дополнительных данных'
-      },
-      {
-        id: 5,
-        type: 'icon',
-        name: 'menu_icon',
-        description: 'Иконка меню-бургера',
-        logic: 'Открытие боковой навигации'
-      }
-    ];
-    
-    return mockElements;
-  };
 
-  const generateMarkdown = (elements: UIElement[], frameName: string): string => {
-    let md = `# ${frameName} Documentation\n\n`;
-    md += `| № | Тип элемента | Название | Описание | Логика работы |\n`;
-    md += `|---|--------------|----------|-----------|---------------|\n`;
-    
-    elements.forEach((element) => {
-      md += `| ${element.id} | ${element.type} | ${element.name} | ${element.description} | ${element.logic} |\n`;
-    });
-    
-    return md;
-  };
 
   const handleGenerate = async () => {
     if (!figmaUrl.trim()) {
@@ -86,21 +34,37 @@ const Index = () => {
 
     setIsLoading(true);
     
-    setTimeout(() => {
-      const mockElements = generateMockElements(figmaUrl);
-      setElements(mockElements);
-      
-      const frameName = 'Login Screen';
-      const md = generateMarkdown(mockElements, frameName);
-      setMarkdown(md);
-      
-      setIsLoading(false);
+    try {
+      const response = await fetch('https://functions.poehali.dev/08a93515-6e5a-4f17-8fd4-36c4aa4b76d9', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ figmaUrl })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка при генерации документации');
+      }
+
+      setMarkdown(data.markdown);
+      setElements([]);
       
       toast({
         title: '✅ Готово!',
-        description: `Создана документация для ${mockElements.length} элементов`
+        description: `Создана документация для ${data.elementsCount} элементов из "${data.frameName}"`
       });
-    }, 1500);
+    } catch (error: any) {
+      toast({
+        title: 'Ошибка',
+        description: error.message || 'Не удалось создать документацию',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCopy = () => {
@@ -205,7 +169,7 @@ const Index = () => {
                 </div>
               </div>
               <CardDescription>
-                Найдено элементов: {elements.length}
+                Документация успешно создана
               </CardDescription>
             </CardHeader>
             <CardContent>

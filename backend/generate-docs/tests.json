@@ -1,0 +1,33 @@
+{
+  "tests": [
+    {
+      "name": "Test invalid URL format",
+      "method": "POST",
+      "body": {
+        "figmaUrl": "https://invalid-url.com"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test empty URL",
+      "method": "POST",
+      "body": {
+        "figmaUrl": ""
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "Figma URL is required"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test OPTIONS request for CORS",
+      "method": "OPTIONS",
+      "expectedStatus": 200
+    }
+  ]
+}
